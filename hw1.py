@@ -4,7 +4,7 @@ from ImgFunctions import *
 # Parameters
 filename = 'building.jpg'
 fileout = 'mybuildingout.png'
-sigma = 5
+sigma = 8
 kernel_size = 5
 
 origImg = misc.imread(filename)
@@ -51,7 +51,7 @@ while not it.finished:
 
     x_off, y_off = approx_dir[0], approx_dir[1]
     if -1 < x + x_off < x_max and -1 < y + y_off < y_max and -1 < x-x_off < x_max and -1 < y-y_off < y_max:
-        if strImg[y, x] < strImg[y+y_off, x+x_off] or strImg[y,x] < strImg[y+y_off, x+x_off]:
+        if strImg[y, x] < strImg[y+y_off, x+x_off] or strImg[y,x] < strImg[y-y_off, x-x_off]:
             I_n[y, x] = 0
         else:
             I_n[y, x] = strImg[y, x]
@@ -63,41 +63,41 @@ while not it.finished:
     # PART i. - BUILDING CHAINS
 
 # Set up thresholds
-t_l = 120
-t_h = 150
+t_l = 180
+t_h = 200
 chains = []
 visited = np.zeros(strImg.shape)
 it = np.nditer(I_n, flags=['multi_index'], op_flags=['readwrite'])
 
-def visit(I_n, dirImg, visited, x, y, t_h):
+def visit(I_n, dirImg, visited, x, y, t_l):
     (ymax, xmax) = I_n.shape
     chain = []
     if visited[y, x] == 1:
         return chain
     visited[y, x] = 1
-    if (I_n[y, x] < t_h):
+    if (I_n[y, x] < t_l):
         return chain
     chain.append((x, y))
     off = dirImg[(x, y)]
     if (0 < y + off[1] < ymax and 0 < x + off[1] < xmax):
-        if (I_n[y + off[1], x+off[0]] > t_h):
-            chain += visit(I_n, dirImg, visited, x+off[0], y+off[1], t_h)
+        if (I_n[y + off[1], x+off[0]] > t_l):
+            chain += visit(I_n, dirImg, visited, x+off[0], y+off[1], t_l)
     if (0 < y - off[1] < ymax and 0 < x - off[1] < xmax):
-        if (I_n[y - off[1], x-off[0]] > t_h):
-            chain += visit(I_n, dirImg, visited, x+off[0], y+off[1], t_h)
+        if (I_n[y - off[1], x-off[0]] > t_l):
+            chain += visit(I_n, dirImg, visited, x+off[0], y+off[1], t_l)
     return chain
 
 
 for x in range(strImg.shape[1]):
     for y in range(strImg.shape[0]):
         if (visited[y, x] == 0):
-            chain = visit(I_n, dirImg, visited, x, y, t_h)
+            chain = visit(I_n, dirImg, visited, x, y, t_l)
             chains.append(chain)
 
 final = np.zeros(strImg.shape)
 list2 = [x for x in chains if x != []]
 
-somelist = [x for x in list2 if max(x, key=lambda y : I_n[y[1], y[0]]) > t_l]
+somelist = [x for x in list2 if max(x, key=lambda y : I_n[y[1], y[0]]) > t_h]
 print len(list2)
 print len(somelist)
 for x in somelist:
