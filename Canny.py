@@ -2,15 +2,17 @@
 from ImgFunctions2 import *
 
 # Parameters
-filename = 'building.jpg'
+filename = 'checker.jpg'
 fileout = 'mybuildingout.png'
-sigma = 10
 
 # This is the radius of the kernel, so 3 would produce a kernel of size 7x7
 kernel_size = 7
+sigma = 0.3 * (kernel_size/2 - 1) + 0.8
+
+# Read in image
 origImg = misc.imread(filename)
 
-#Convert image to grayscale if it isn't already
+# Convert image to grayscale if it isn't already
 if len(origImg.shape) > 2:
     origImg = rgb2gray(origImg)
 
@@ -95,8 +97,6 @@ final = np.zeros(strImg.shape)
 list2 = [x for x in chains if x != []]
 
 somelist = [x for x in list2 if max(x, key=lambda y : I_n[y[1], y[0]]) > t_h]
-print len(list2)
-print len(somelist)
 for x in somelist:
     for pix in x:
         final[pix[1], pix[0]] = I_n[pix[1], pix[0]]
@@ -104,6 +104,5 @@ for x in somelist:
 plt.imshow(final)
 plt.imsave('I_n', I_n)
 plt.gray()
-plt.show()
-misc.imsave(fileout, final)
+misc.imsave('canny1.jpg', final)
 

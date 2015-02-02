@@ -5,9 +5,9 @@ from numpy import linalg as LA
 # Input / Parameters
 
 threshold = 20000
-kernelSize = 5
+kernelSize = 3
 sigma = 0.3 * (kernelSize/2 - 1) + 0.8
-length = 4
+length = 2
 img = misc.imread('checker.jpg')
 
 img = rgb2gray(img)
@@ -73,7 +73,7 @@ while not it.finished:
         it.iternext()
         continue
     (y, x) = it.multi_index
-    if (it[0] == np.amax(getSubMatrix(x, y, length, eigs))):
+    if (it[0] == np.amax(getSubMatrix(x, y, 2*length, eigs))):
         final[y, x] = it[0]
         clearSubMatrix(x, y, length, eigs)
         pointList.append((x, y))
