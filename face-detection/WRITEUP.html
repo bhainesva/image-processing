@@ -1,0 +1,354 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"  
+"http://www.w3.org/TR/html4/loose.dtd">  
+<html > 
+    <head><title></title> 
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"> 
+        <meta name="generator" content="TeX4ht (http://www.tug.org/tex4ht/)"> 
+        <meta name="originator" content="TeX4ht (http://www.tug.org/tex4ht/)"> 
+        <!-- html --> 
+        <meta name="src" content="writeup.tex"> 
+        <meta name="date" content="2015-02-05 14:36:00"> 
+        <link rel="stylesheet" type="text/css" href="mywriteup.css"> 
+    </head><body 
+                                               >
+                                               <!--l. 8--><p class="noindent" >
+
+
+
+                                               <div class="center" 
+                                                    >
+                                                    <!--l. 9--><p class="noindent" >
+                                                    <!--l. 11--><p class="noindent" ><span 
+                                                                   class="cmcsc-10x-x-207">C<span 
+                                                                   class="small-caps">o</span><span 
+                                                                   class="small-caps">m</span><span 
+                                                                   class="small-caps">p</span><span 
+                                                                   class="small-caps">u</span><span 
+                                                                   class="small-caps">t</span><span 
+                                                                   class="small-caps">e</span><span 
+                                                                   class="small-caps">r</span> V<span 
+                                                                   class="small-caps">i</span><span 
+                                                                   class="small-caps">s</span><span 
+                                                                   class="small-caps">i</span><span 
+                                                                   class="small-caps">o</span><span 
+                                                                   class="small-caps">n</span></span><br /><br />
+                                                           <span 
+                                                                   class="cmcsc-10x-x-172">A<span 
+                                                                   class="small-caps">s</span><span 
+                                                                   class="small-caps">s</span><span 
+                                                                   class="small-caps">i</span><span 
+                                                                   class="small-caps">g</span><span 
+                                                                   class="small-caps">n</span><span 
+                                                                   class="small-caps">m</span><span 
+                                                                   class="small-caps">e</span><span 
+                                                                   class="small-caps">n</span><span 
+                                                                   class="small-caps">t</span> 2</span><br /><br />
+                                                           ____________________________________________________<br /><br />
+                                                           <span 
+                                                                   class="cmbx-12x-x-207">Face Detection</span><br />
+                                                               __________<br /><br />
+                                                               <span 
+                                                                   class="cmr-12x-x-120">March 5, 2015</span></div>
+
+                                               <h3 class="sectionHead"><span class="titlemark">1   </span> <a 
+                                                                             id="x1-10001"></a>Source Code</h3>
+                                               <!--l. 26--><p class="noindent" >There are three components to the code.
+                                               <ul class="itemize1">
+                                                   <li class="itemize"><a 
+                                                       href="gaussianFace.py" >gaussianFace.py</a>  -  Implementation of a face detector using a Gaussian distribution to model the distribution of face and non face patches.
+                                                   </li>
+                                               <li class="itemize"><a 
+                                                   href="linearClassifier.py" >linearClassifier.py</a> - Implementation of a face detector using a linear classifier trained using logistic regression.
+                                               </li>
+                                               <li class="itemize"><a 
+                                                   href="ImgFunctions2.py" >ImgFunctions2.py</a> - Collection of functions used by both algorithms.</li></ul>
+                                               <!--l. 33--><p class="noindent" >
+                                               <h3 class="sectionHead"><span class="titlemark">2   </span> <a 
+                                                                             id="x1-20002"></a>Constructing the Training Set</h3>
+                                               <p>The images used in the training set are from <a href="http://vasc.ri.cmu.edu/idb/html/face/frontal_images/">Test Set A</a> collected at CMU by Henry A. Rowley, Shumeet Baluja, and Takeo Kanade. I used a python script to automate the extraction of face patches from the images based on the coordinates provided <a href="http://vasc.ri.cmu.edu/idb/images/face/frontal_images/list.html">here</a>. My first approach was simply to take the rectangle formed by the eyes and mouth. This produced a problem when scaling the images down to 12x12 because the patches were often not square to begin with and scaling them to a square shape often made them unrecognizable as faces. To fix this I took the maximum side length of the rectangle and formed a square with that side length. This approach seemed to work but I was interested in how results would change as a result of using a less tight crop. I began by adding a fixed number of pixels to the side length of the square but because the resolution of the images varied significantly this wan't consistently successful. Instead I introduced a parameter to scale the side length of the square and then shifted it to ensure it stayed centered on the face. The collage below shows images with a scaling factor of XXX.</p>
+                                               <p>To select the nonface patches I randomly selected 12x12 patches from the training images and checked that they didn't intersect with any of the face coordinates provided on the CMU website. One drawback of this is that often I would end up with multiple patches that were almost identical in content. This could potentially be improved by calculating some metric that scores similarity of two patches and making sure that no two patches are too close or by increasing the size of the training set. I selected 12x12 patches directly but it would be interesting to see if selecting patches that are on the same scale as the faces in the image and then scaling them down would have an effect on output.</p>
+
+                                                       <IMG class="displayed" src="collage.png" />
+
+                                                <!--l. 33--><p class="noindent" >
+                                               <h3 class="sectionHead"><span class="titlemark">3   </span> <a 
+                                                                             id="x1-20002"></a>Gaussian Distribution</h3>
+                                               <!--l. 52--><p class="noindent" >
+                                                   <h4 class="subsectionHead"><span class="titlemark">3.1   </span> <a 
+                                                 id="x1-50003.2"></a>Parameters</h4>
+                                               <ul class="itemize1">
+                                                   <li class="itemize">filename - Name of the file to be checked for faces.
+                                                   </li>
+                                                   <li class="itemize">tau - Threshold to use for singular values. 
+                                                   </li>
+                                               </ul>
+
+                                               <!--l. 52--><p class="noindent" >
+                                                   <h4 class="subsectionHead"><span class="titlemark">3.2   </span> <a 
+                                                 id="x1-50003.2"></a>Output</h4>
+                                                   The program creates four image files. The first is 'binary.jpg' which displays rectangles in the areas that faces are detected. The second image is 'outline.jpg' which displays the original image with the 12x12 patches which were determined to be faces outlined. The last two are titled 'faceMean.jpg' and 'nofaceMean.jpg' and are the sample means calculated for each class.
+
+                                                <!--l. 52--><p class="noindent" >
+                                                   <h4 class="subsectionHead"><span class="titlemark">3.3   </span> <a 
+                                                 id="x1-50003.2"></a>Discussion</h4> I encountered a number of problems while implementing the gaussian face detector. These included determining an appropriate value for tau and determining at what point values should be scaled, if at all. In particular, I found it difficult to understand and predict the impact that different values of tau would have on the output of the detector. 
+                                                <!--l. 52--><p class="noindent" >
+                                                   <h5 class="subsectionHead"><span class="titlemark">3.3.1   </span> <a 
+                                                 id="x1-50003.2"></a>Sample Means</h5> The below images are the sample means calculated from the training set for each patch class. Although I was concerned that some of the face patches were barely recognizable, these images reassured me that on average the patches provided an accurate approximation of a face.
+                                               <ul class="rig columns-2">
+                                                   <li>
+                                                       <img class="resize" src="faceMean.jpg" />
+                                                       <h3>Face Mean</h3>
+                                                       <p></p>
+                                                   </li>
+                                                   <li>
+                                                       <img class='resize' src="nofaceMean.jpg" />
+                                                       <h3>Non-Face Mean</h3>
+                                                       <p> </p>
+                                                   </li>
+                                               </ul>
+                                                <!--l. 52--><p class="noindent" >
+                                                   <h5 class="subsectionHead"><span class="titlemark">3.3.2   </span> <a 
+                                                 id="x1-50003.2"></a>Selecting Tau</h5>
+                                                   My first step in identifying an appropriate tau was to plot the values and look for a 'knee' in the graph as suggested in class. Cropped versions of these graphs are shown below.
+                                         <h3 class="subsextionHead"></a>Specific Values</a></h3>
+                                               <ul class="rig columns-2">
+                                                   <li>
+                                                       <img class="resize" src="specificValuesFace.png" />
+                                                       <h3>Face Class</h3>
+                                                       <p></p>
+                                                   </li>
+                                                   <li>
+                                                       <img class='resize' src="specificValuesNoface.png" />
+                                                       <h3>Non-Face Class</h3>
+                                                       <p> </p>
+                                                   </li>
+                                               </ul>
+                                               These graphs were useful in determining an approximate range from which an appropriate tau might be selected but I didn't see an immediately obvious single value. For this reason I experimented with a number of values for tau in the range between 100 and 400. My intuition suggested that a lower value of tau would result in more detected faces and a higher value would result fewer detected faces. This did not always prove to be the case. For example, with the three images shown below.
+                                         <h3 class="subsextionHead"></a>Variation in Tau</a></h3>
+                                               <ul class="rig columns-3">
+                                                   <li>
+                                                       <img class="resize" src="smallmom_t-100.png" />
+                                                       <h3>tau = 100</h3>
+                                                       <p></p>
+                                                   </li>
+                                                   <li>
+                                                       <img class='resize' src="smallmom_t-115.png" />
+                                                       <h3>tau = 115</h3>
+                                                       <p> </p>
+                                                   </li>
+                                                   <li>
+                                                       <img class='resize' src="smallmom_t-120.png" />
+                                                       <h3>tau = 120</h3>
+                                                       <p></p>
+                                                   </li>
+                                               </ul>
+                                               Setting tau to be 115 produced the most correct positives and fewest false positives of the settings that I found. This was particularly surprising to me because the values of S for which tau acted as a threshold varied from ~1.1E-11 to 3.3E5. Variations in tau of only 5 or 10 often excluded only one or two values from S and yet resulted in fairly significant changes. Furthermore, while 115 was the best setting for this particular image, this was not always the case. After some experimentation it seems that tau can be interpreted as how tightly the classifier stuck to the training set. For very small values of tau for example I was able to achieve 100% accuracy over the training data but this resulted in very poor results on other images. This can be seen in the graph below. On the y-axis is accuracy.The x-axis plots the value of tau logarithmically. Thus the point marked -3 indicates the value of tau was 10^-3. The blue line shows accuracy over the training set and the green line shows accuracy over the additional testing set.
+                                               <ul class="rig columns-1">
+                                                   <li>
+                                                       <img class="resize" src="taugraph.png" />
+                                                       <h3></h3>
+                                                       <p></p>
+                                                   </li>
+                                               </ul>
+                                                <!--l. 52--><p class="noindent" >
+                                                   <h4 class="subsectionHead"><span class="titlemark">3.4   </span> <a 
+                                                 id="x1-50003.2"></a>Results</h4> The test set I downloaded to use in constructing my training data had almost 170 faces in it and only 100 were used for the training set itself. I had already written a script to extract the first 100 faces so I decided I would extract the remaining 68 to use as a way to test the accuracy of my classifier. Accuracy depended on the value of tau used but for a tau of 115 my classifier had 62.5% accuracy over the training set and 66.91% accuracy over the additional test set. This was surprising for a number of reasons. I had expected  the accuracy on the training set to be much closer to 100% and in particular I expected it to be larger than the accuracy over the non training set. The second surprise was that by dividing the critical values by 100 instead of dividing the values of the covariance matrix by 100 I was able to increase accuracy significantly in both categories. This change resulted in 98.5% accuracy over the training set and 77.94% accuracy over the non training set. Yet overall this change seemed to produce worse results. A comparison is below.
+                                         <h3 class="subsextionHead"></a>Scaling</a></h3>
+                                               <ul class="rig columns-2">
+                                                   <li>
+                                                       <img class="resize" src="smallmom_t-115.png" />
+                                                       <h3>Scaling Sigma</h3>
+                                                       <p></p>
+                                                   </li>
+                                                   <li>
+                                                       <img class='resize' src="smallmom-scale_critical.png" />
+                                                       <h3>Scaling Critical Values</h3>
+                                                       <p> </p>
+                                                   </li>
+                                               </ul>
+                                                <!--l. 52--><p class="noindent" >
+                                                   <h5 class="subsectionHead"><span class="titlemark">3.4.1   </span> <a 
+                                                 id="x1-50003.2"></a>Image # 1 - randtest.jpg</h5>
+                                                   <!--l. 53--><p class="noindent" >This image was specially constructed by inserting face patches from the training set into a randomly generated background in order to check that the detection algorithm was implemented correctly. The final result was acheived with tau=1.</p>
+
+                                               <ul class="rig columns-3">
+                                                   <li>
+                                                       <img class='resize' src="randtest.jpg" />
+                                                       <h3>Original Image</h3>
+                                                       <p></p>
+                                                   </li>
+                                                   <li>
+                                                       <img class='resize' src="randtest-tau_200.png" />
+                                                       <h3>Tau = 200</h3>
+                                                       <p></p>
+                                                   </li>
+                                                   <li>
+                                                       <img class='resize'  src="randtest-tau_1.png" />
+                                                       <h3>Final Result</h3>
+                                                       <p>
+                                                       </p>
+                                                   </li>
+                                               </ul>
+                                                <!--l. 52--><p class="noindent" >
+                                                   <h5 class="subsectionHead"><span class="titlemark">3.4.2   </span> <a 
+                                                 id="x1-50003.2"></a>Image # 2 - kaaritest.jpg</h5>
+                                                   <!--l. 53--><p class="noindent" >This is a scaled down version of kaari1.gif from the CMU test set. This image was not used in the training set. The final result was achieved with tau=400.
+
+                                               <ul class="rig columns-3">
+                                                   <li>
+                                                       <img class='resize' src="kaaritest.jpg" />
+                                                       <h3>Original Image</h3>
+                                                       <p></p>
+                                                   </li>
+                                                   <li>
+                                                       <img class='resize'  src="kaaritest-tau_200.png" />
+                                                       <h3>Tau = 200</h3>
+                                                       <p> </p>
+                                                   </li>
+                                                   <li>
+                                                       <img class='resize'  src="kaaritest-tau_400.png" />
+                                                       <h3>Final Result</h3>
+                                                       <p> </p>
+                                                   </li>
+                                               </ul>
+                                                <!--l. 52--><p class="noindent" >
+                                                   <h5 class="subsectionHead"><span class="titlemark">3.4.3   </span> <a 
+                                                 id="x1-50003.2"></a>Image # 3 - judybatstest.jpg</h5>
+                                                   <!--l. 53--><p class="noindent" >This is a scaled down version of judybats.gif from the CMU test set. This image was not used in the training set. The final result was achieved with tau=170.
+
+                                               <ul class="rig columns-3">
+                                                   <li>
+                                                       <img class='resize' src="judybatstest.jpg" />
+                                                       <h3>Original Image</h3>
+                                                       <p></p>
+                                                   </li>
+                                                   <li>
+                                                       <img class='resize'  src="judybatstest-tau_200.png" />
+                                                       <h3>Tau = 200</h3>
+                                                       <p> </p>
+                                                   </li>
+                                                   <li>
+                                                       <img class='resize'  src="judybatstest-tau_170.png" />
+                                                       <h3>Final Result</h3>
+                                                       <p> </p>
+                                                   </li>
+                                               </ul>
+
+                                                <!--l. 33--><p class="noindent" >
+                                               <h3 class="sectionHead"><span class="titlemark">4   </span> <a 
+                                                                             id="x1-20002"></a>Linear Classifier</h3>
+                                               <!--l. 52--><p class="noindent" >
+                                                   <h4 class="subsectionHead"><span class="titlemark">4.1   </span> <a 
+                                                 id="x1-50003.2"></a>Parameters</h4>
+                                               <ul class="itemize1">
+                                                   <li class="itemize">filename - Name of the file to be checked for faces.
+                                                   </li>
+                                                   <li class="itemize">learningRate - How quickly the weight vector is changed during training.
+                                                   </li>
+                                                   <li class="itemize">iterations - Number of iterations to run the training portion of the classifier. I used 7000 for my results because this produced convergent accuracy for every learning rate that I tried.
+                                                   </li>
+                                               </ul>
+
+                                               <!--l. 52--><p class="noindent" >
+                                                   <h4 class="subsectionHead"><span class="titlemark">4.2   </span> <a 
+                                                 id="x1-50003.2"></a>Output</h4>
+                                                   The program creates one image file, outline.png, which shows the original image with squares outlining the places where faces were detected.
+
+                                                <!--l. 52--><p class="noindent" >
+                                                   <h4 class="subsectionHead"><span class="titlemark">4.3   </span> <a 
+                                                 id="x1-50003.2"></a>Discussion</h4> In some ways the linear classifier was simpler to implement than the gaussian distribution. Although the underlying math is eually complex the implementation involves less code and seemed more straightforward. It did present its own frustrations however. Although accuracy on the training set was higher than the gaussian detector there was no value comparable to tau that could be tweaked to improve results for a given result. This meant that results for a particular image were often unsatisfying. 
+                                                <!--l. 52--><p class="noindent" >
+                                                   <h5 class="subsectionHead"><span class="titlemark">4.3.1   </span> <a 
+                                                 id="x1-50003.2"></a>Learning Rate</h5>
+                                                   These are graphs showing how accuracy increases with the number of iterations of training. It's interesting to note that the learning rate had very little impact on the shape of the graph or how quickly accuracy reached 100%. It's also interesting to note the large spikes in decreased accuracy. I have no satisfying explanation for why these sudden decreases happen. Learning rates significantly smaller than these, say 0.0000001, displayed the same overall shapes but converged to accuracies below 100%.
+                                                   
+                                         <h3 class="subsextionHead"></a>Training Accuracy</a></h3>
+                                               <ul class="rig columns-3">
+                                                   <li>
+                                                       <img class="resize" src="accuracy-learning_1.png" />
+                                                       <h3>Learning Rate = 0.1</h3>
+                                                       <p></p>
+                                                   </li>
+                                                   <li>
+                                                       <img class="resize" src="accuracy-learning_5.png" />
+                                                       <h3>Learning Rate = 0.5</h3>
+                                                       <p></p>
+                                                   </li>
+                                                   <li>
+                                                       <img class="resize" src="accuracy-learning_9.png" />
+                                                       <h3>Learning Rate = 0.9</h3>
+                                                       <p></p>
+                                                   </li>
+                                               </ul>
+                                                <!--l. 52--><p class="noindent" >
+                                                   <h4 class="subsectionHead"><span class="titlemark">4.4   </span> <a 
+                                                 id="x1-50003.2"></a>Results</h4> 
+                                                <!--l. 52--><p class="noindent" >
+                                                   <h5 class="subsectionHead"><span class="titlemark">4.4.1   </span> <a 
+                                                 id="x1-50003.2"></a>Image # 1 - randtest.jpg</h5>
+                                                   <!--l. 53--><p class="noindent" > This is the same image from the gaussian section.
+
+                                               <ul class="rig columns-2">
+                                                   <li>
+                                                       <img class='resize' src="randtest.jpg" />
+                                                       <h3>Original Image</h3>
+                                                       <p></p>
+                                                   </li>
+                                                   <li>
+                                                       <img class='resize'  src="randtest-lr.png" />
+                                                       <h3>Final Result</h3>
+                                                       <p>
+                                                       </p>
+                                                   </li>
+                                               </ul>
+                                                <!--l. 52--><p class="noindent" >
+                                                   <h5 class="subsectionHead"><span class="titlemark">4.4.2   </span> <a 
+                                                 id="x1-50003.2"></a>Image # 2 - kaaritest.jpg</h5>
+                                                   <!--l. 53--><p class="noindent" >This is the same image from the gaussian section.
+
+                                               <ul class="rig columns-2">
+                                                   <li>
+                                                       <img class='resize' src="kaaritest.jpg" />
+                                                       <h3>Original Image</h3>
+                                                       <p></p>
+                                                   </li>
+                                                   <li>
+                                                       <img class='resize'  src="kaaritest-lr.png" />
+                                                       <h3>Final Result</h3>
+                                                       <p> </p>
+                                                   </li>
+                                               </ul>
+                                                <!--l. 52--><p class="noindent" >
+                                                   <h5 class="subsectionHead"><span class="titlemark">4.4.3   </span> <a 
+                                                 id="x1-50003.2"></a>Image # 3 - judybatstest.jpg</h5>
+                                                   <!--l. 53--><p class="noindent" >This is the same image from the gaussian section.
+
+                                               <ul class="rig columns-3">
+                                                   <li>
+                                                       <img class='resize' src="judybatstest.jpg" />
+                                                       <h3>Original Image</h3>
+                                                       <p></p>
+                                                   </li>
+                                                   <li>
+                                                       <img class='resize'  src="judybatstest-lr.png" />
+                                                       <h3>Final Result</h3>
+                                                       <p> </p>
+                                                   </li>
+                                               </ul>
+
+
+                                               <!--l. 33--><p class="noindent" >
+                                               <h3 class="sectionHead"><span class="titlemark">5   </span> <a 
+                                                                             id="x1-20002"></a>Conclusion</h3><p>The results generated by my implementations of the gaussian and linear regression based face detectors were heavily limited by the small size of the training set used. For the sample images presented here the gaussian detector performed on a level with the linear classifier based detector despite statistics suggesting that the opposite will be true in general. I believe this is partly a result of the fact that, because test images with the right resolution were fairly labor intensive to make, only a few images were compared. For a larger sample size I expect that the linear detector would have better performance on average. Additionally, the gaussian detector benefited from human input in the form a tweaking the tau parameter. 
+
+                                                                     A potential improvement for the linear detector would be to attempt to account for the fact that the probability of a face occuring is not 50/50. 
+
+                                               <!--l. 33--><p class="noindent" >
+                                               <h3 class="sectionHead"><span class="titlemark">6   </span> <a 
+                                                                             id="x1-20002"></a>Sources:</h3>The code used for displaying the images was taken from <a href="http://alijafarian.com/responsive-image-grids-using-css/">this website</a>.
+
+    </body></html> 
+
+
+
+

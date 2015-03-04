@@ -1,0 +1,16 @@
+GIF format really screwed with it.
+
+So right now in the linear classifier I'm doing no scaling anywhere. The learning goes for 1000 iterations. A learning rate of 0.001 produces very dense solutions. Faces everywhere. 0.0001 produces marginally less dense solutions. Centered around the head and shoulders. 0.00001 produces NO SOLUTIONS. 0.000001 produces VERY DENSE SOLUTIONS?!??
+
+When I divide i/100 when adding singular values: 100% acc. on training data, .5579 on test data.
+When I divide sigmas by 100, 99% acc. on training, .7536 on test data.
+
+Jk I think depending on tau and where the division happens it totally screws the percents and the percents don't necessarily correspond to how well it actually seems to work on a given image.
+
+What does tau even do. Like. Very small changes can have pretty large results and in unpredictable directions.
+
+Actually run the gaussian thing to check that you're not just picking images it works on to show. It's supposed to be worse than the linear one and it actually is probably you're just cheating in your image selection. You can mention that it's more sensitive to what it labels a face so when it does say smomething is a face it often works. Linear one is just batshit everything is a face no worries dude I gotchu thiss whole image is faces yup def fo sho.
+
+graph accuracy on test vs accuracy on other for increasing values of tau. think it might be interesting
+
+zoom in on graph of iterations boy who fucking knows
